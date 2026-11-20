@@ -271,7 +271,7 @@
       </form>
 
       <div class="pt-2 border-t flex items-center justify-between text-[11px] ui-muted" style="border-color: var(--border-ui);">
-        <span id="authBackendBadge">Firebase Auth + Drive v3</span>
+        <span id="authBackendBadge">yunikon-a3348 connected</span>
         <button type="button" id="openFirebaseFromLoginBtn" class="font-semibold underline" data-i18n="firebaseBtn">Firebase Config</button>
       </div>
     </div>
@@ -349,12 +349,6 @@
       </div>
     </div>
   </header>
-
-  <!-- Print Only Header -->
-  <div class="print-only-banner hidden max-w-7xl mx-auto px-6 pt-4 pb-2">
-    <h2 class="text-xl font-bold">Yunikon Auto — Daily Vehicle Import Documentation Report</h2>
-    <p class="text-xs ui-muted" id="printTimestamp"></p>
-  </div>
 
   <!-- ==================== MAIN WORKSPACE ==================== -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 space-y-5">
@@ -537,11 +531,11 @@
         <button type="button" class="close-modal px-2.5 py-1 rounded-xl ui-soft border text-xs font-bold">✕</button>
       </div>
       <p class="text-xs ui-muted leading-relaxed" data-i18n="firebaseModalDesc">
-        Firebase Firestore භාවිතා කර Users, Passwords (SHA-256) සහ Roles පාලනය කරන්න. Config නොදැම්මත් Local Cache මගින් වැඩ කරයි.
+        Firebase Firestore භාවිතා කර Users, Passwords (SHA-256) සහ Roles පාලනය කරන්න.
       </p>
 
       <div>
-        <label class="block text-xs font-semibold mb-1">Paste Firebase Config Snippet (Optional Auto-Fill)</label>
+        <label class="block text-xs font-semibold mb-1">Paste Firebase Config Snippet (Auto-Fill)</label>
         <textarea id="firebaseSnippetPaste" rows="4" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}' class="w-full px-3 py-2 rounded-xl ui-soft border text-xs font-mono outline-none"></textarea>
         <button type="button" id="parseFirebaseSnippetBtn" class="mt-1.5 px-3 py-1 rounded-lg ui-soft border text-xs font-bold">Auto-Fill Fields</button>
       </div>
@@ -566,7 +560,7 @@
       </div>
 
       <div class="flex items-center justify-between pt-2">
-        <span id="firebaseStatusBadge" class="text-xs font-mono ui-muted">Local Fallback Mode</span>
+        <span id="firebaseStatusBadge" class="text-xs font-mono ui-muted">yunikon-a3348</span>
         <button type="button" id="saveFirebaseConfigBtn" class="px-4 py-2.5 rounded-xl btn-accent text-xs font-extrabold" data-i18n="saveBtn">Save &amp; Connect</button>
       </div>
     </div>
@@ -669,12 +663,20 @@
     (function () {
       'use strict';
 
-      /* Optional hard-coded defaults */
+      /* Pre-populated with your exact Firebase configuration snippet */
       const APP_CONFIG = {
-        firebase: null,
+        firebase: {
+          apiKey: "AIzaSyA8wC6gc7OiBAAiiPww02oojTHC2n6YniU",
+          authDomain: "yunikon-a3348.firebaseapp.com",
+          projectId: "yunikon-a3348",
+          storageBucket: "yunikon-a3348.firebasestorage.app",
+          messagingSenderId: "807033121410",
+          appId: "1:807033121410:web:0c705baa617af0547ea29b",
+          measurementId: "G-Q7MCLKJEQM"
+        },
         googleClientId: '',
         sharedFolderId: '',
-        logoUrl: 'https://drive.google.com/thumbnail?id=1j5-l8TpFcJsKyMDpJJpfVvUg4ukwYL-h&sz=w256'
+        logoUrl: ''
       };
 
       const DB_NAME = 'YunikonAutoHybridDB';
@@ -768,7 +770,7 @@
           emptyTitle: 'තවම වැඩ සටහන් නොමැත',
           emptySub: 'වම්පස පෝරමයෙන් ඔබගේ පළමු දෛනික සටහන ඇතුළත් කරන්න.',
           firebaseModalTitle: 'Firebase Login & User Security',
-          firebaseModalDesc: 'Firebase Firestore හරහා Users, Passwords (SHA-256) සහ Roles පාලනය කරන්න. Config නොදැම්මත් Local Cache මගින් වැඩ කරයි.',
+          firebaseModalDesc: 'yunikon-a3348 Firebase project එක සමඟ සම්බන්ධ කර ඇත.',
           driveModalTitle: 'Google Drive 15GB Cloud Database',
           driveModalDesc: 'සියලුම Work Logs සහ Compress කළ ඡායාරූප Google Drive හි (Yunikon_Auto_Work_Logs_DB / yunikon_auto_logs_db.json) තුළ සුරක්ෂිත කර Sync කරන්න.',
           sharedFolderLabel: 'Shared Drive Folder ID (Optional)',
@@ -789,8 +791,8 @@
           userAddedToast: 'නව User සාර්ථකව එකතු කරන ලදී!',
           guideHtml: `
             <div class="ui-soft border rounded-xl p-3.5 space-y-1.5">
-              <div class="font-bold">1. Firebase (Login, Users &amp; Roles)</div>
-              <p class="text-xs ui-muted">console.firebase.google.com හි Project එකක් සාදා Firestore Database Enable කරන්න. Web App Config keys Copy කර <b>Firebase</b> බොත්තමෙන් Save කරන්න.</p>
+              <div class="font-bold">1. Firebase Firestore Connection</div>
+              <p class="text-xs ui-muted">Project ID <b>yunikon-a3348</b> සාර්ථකව App එකට සම්බන්ධ කර ඇත.</p>
             </div>
             <div class="ui-soft border rounded-xl p-3.5 space-y-1.5">
               <div class="font-bold">2. Google Drive API v3 (15GB Cloud Database)</div>
@@ -865,7 +867,7 @@
           emptyTitle: 'No work logs found',
           emptySub: 'Add your first daily vehicle import entry using the form.',
           firebaseModalTitle: 'Firebase Login & User Security',
-          firebaseModalDesc: 'Manage Users, SHA-256 Passwords, and Roles (Admin / Manager / Staff) via Firebase Firestore.',
+          firebaseModalDesc: 'Connected to Project yunikon-a3348.',
           driveModalTitle: 'Google Drive 15GB Cloud Database',
           driveModalDesc: 'Store and sync all work logs & compressed photos inside Google Drive (Yunikon_Auto_Work_Logs_DB / yunikon_auto_logs_db.json).',
           sharedFolderLabel: 'Shared Drive Folder ID (Optional)',
@@ -886,8 +888,8 @@
           userAddedToast: 'New user created!',
           guideHtml: `
             <div class="ui-soft border rounded-xl p-3.5 space-y-1.5">
-              <div class="font-bold">1. Firebase (Login, Users &amp; Roles)</div>
-              <p class="text-xs ui-muted">Create a project at console.firebase.google.com, enable Firestore Database, copy Web App config keys, and save via the <b>Firebase</b> button.</p>
+              <div class="font-bold">1. Firebase Firestore Connection</div>
+              <p class="text-xs ui-muted">Project ID <b>yunikon-a3348</b> is connected to your web application.</p>
             </div>
             <div class="ui-soft border rounded-xl p-3.5 space-y-1.5">
               <div class="font-bold">2. Google Drive API v3 (15GB Cloud Database)</div>
@@ -1130,10 +1132,10 @@
             }
             localStorage.setItem('ya_users_cache', JSON.stringify(state.users));
             document.getElementById('firebaseStatusBadge').textContent = 'Connected: ' + state.firebaseConfig.projectId;
-            document.getElementById('authBackendBadge').textContent = 'Firebase Firestore + Drive v3';
+            document.getElementById('authBackendBadge').textContent = state.firebaseConfig.projectId + ' (Firestore)';
           } catch (err) {
             console.warn('Firebase fallback:', err);
-            document.getElementById('firebaseStatusBadge').textContent = 'Fallback Mode (Check Rules/Config)';
+            document.getElementById('firebaseStatusBadge').textContent = 'Fallback Mode (Check Rules)';
           }
         }
       }
