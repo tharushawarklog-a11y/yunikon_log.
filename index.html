@@ -1,0 +1,2591 @@
+<!DOCTYPE html>
+<html lang="si" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Yunikon Auto | Daily Work & Import Documentation Tracker</title>
+
+  <!-- Google Fonts: Inter & Noto Sans Sinhala -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans Sinhala', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Google Identity Services (GIS) for OAuth 2.0 Google Drive Sync -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    /* Base Typography & Smooth Transitions */
+    body {
+      font-family: 'Inter', 'Noto Sans Sinhala', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Fix iOS / Android Date & Time input clipping and overflow */
+    input[type="date"],
+    input[type="time"] {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      appearance: none;
+      min-height: 2.75rem;
+    }
+
+    input[type="date"]::-webkit-date-and-time-value,
+    input[type="time"]::-webkit-date-and-time-value {
+      text-align: left;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.45);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.7);
+    }
+
+    /* Subtle Card Hover & Animation */
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-entry {
+      animation: fadeSlideIn 0.25s ease-out forwards;
+    }
+
+    /* Print / PDF Daily Report Styles */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 11pt;
+      }
+      .no-print,
+      #securityLockScreen,
+      #toastContainer,
+      #lightboxModal,
+      #driveModal,
+      #securityModal,
+      #guideModal,
+      #confirmModal,
+      #entryFormSection,
+      #filterToolbar,
+      header button,
+      .log-actions {
+        display: none !important;
+      }
+      header {
+        position: static !important;
+        border-bottom: 2px solid #1e293b !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      .print-only-banner {
+        display: block !important;
+      }
+      .log-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        margin-bottom: 12px !important;
+      }
+      .log-card * {
+        color: #0f172a !important;
+      }
+      .print-thumb {
+        width: 90px !important;
+        height: 68px !important;
+        border: 1px solid #94a3b8 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 min-h-screen flex flex-col">
+
+  <!-- ==================== SECURITY PIN LOCK SCREEN ==================== -->
+  <div id="securityLockScreen" class="fixed inset-0 z-50 hidden bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-8 text-center animate-entry">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-blue-600/10 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-slate-900 dark:text-white" data-i18n="lockTitle">Yunikon Auto Security Lock</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" data-i18n="lockSubtitle">Enter your security PIN to access daily work logs</p>
+
+      <form id="unlockForm" class="mt-6 space-y-4">
+        <div>
+          <input
+            type="password"
+            id="unlockPinInput"
+            inputmode="numeric"
+            maxlength="12"
+            autocomplete="off"
+            placeholder="••••"
+            class="w-full text-center tracking-[0.4em] text-2xl font-bold px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          />
+          <p id="unlockErrorMsg" class="text-xs text-rose-500 font-medium mt-2 hidden"></p>
+        </div>
+        <button type="submit" class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-600/25 transition active:scale-[0.99]" data-i18n="unlockBtn">
+          Unlock Workspace
+        </button>
+      </form>
+
+      <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <span>SHA-256 Protected</span>
+        <button type="button" id="lockLangToggle" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+          සිංහල / EN
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== STICKY TOP HEADER ==================== -->
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2.5">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-blue-600/20 shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white truncate">
+              YUNIKON AUTO
+            </h1>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800">
+              JP Imports
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 truncate" data-i18n="appSubtitle">
+            Daily Work & Vehicle Import Documentation
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="flex items-center flex-wrap gap-1.5 sm:gap-2">
+        <!-- Google Drive Sync Status Pill -->
+        <button
+          type="button"
+          id="openDriveModalBtn"
+          class="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 transition"
+          title="Google Drive Cloud Sync"
+        >
+          <span id="driveStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+          <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm1.73 0l6.56 11.5h6.85L16.29 3.5H9.44zm6.27 12.5H2.58l3.43 6h13.13l-3.43-6z"/>
+          </svg>
+          <span id="driveHeaderLabel" class="hidden md:inline" data-i18n="driveBtnLabel">Google Drive</span>
+        </button>
+
+        <!-- Quick Sync Now Button (Shown when connected) -->
+        <button
+          type="button"
+          id="quickSyncBtn"
+          class="hidden items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition"
+          title="Sync with Google Drive Now"
+        >
+          <svg id="quickSyncIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="hidden sm:inline" data-i18n="syncNow">Sync</span>
+        </button>
+
+        <!-- Security PIN Settings / Lock -->
+        <button
+          type="button"
+          id="openSecurityModalBtn"
+          class="p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition"
+          title="Security & PIN Lock"
+        >
+          <svg id="headerLockIcon" class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span class="hidden lg:inline" data-i18n="securityBtn">Security</span>
+        </button>
+
+        <!-- Instant Lock Button (Only visible when PIN is configured) -->
+        <button
+          type="button"
+          id="instantLockBtn"
+          class="hidden p-2 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 transition"
+          title="Lock Screen Now"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+          </svg>
+        </button>
+
+        <!-- Setup Guide Button -->
+        <button
+          type="button"
+          id="openGuideModalBtn"
+          class="p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition"
+          title="GitHub Pages & Google Drive Setup Guide"
+        >
+          <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="hidden lg:inline" data-i18n="guideBtn">Setup Guide</span>
+        </button>
+
+        <!-- Bilingual Language Toggle -->
+        <button
+          type="button"
+          id="langToggleBtn"
+          class="px-3 py-2 rounded-xl text-xs font-bold bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/40 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 transition"
+        >
+          සිංහල
+        </button>
+
+        <!-- Dark / Light Theme Toggle -->
+        <button
+          type="button"
+          id="themeToggleBtn"
+          class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 transition"
+          aria-label="Toggle Theme"
+        >
+          <!-- Sun Icon (shown in dark mode) -->
+          <svg id="sunIcon" class="w-4 h-4 hidden text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <!-- Moon Icon (shown in light mode) -->
+          <svg id="moonIcon" class="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Print-Only Report Header -->
+  <div class="print-only-banner hidden max-w-7xl mx-auto px-6 pt-4 pb-2">
+    <p class="text-xs text-slate-500" id="printTimestamp"></p>
+  </div>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-5 sm:py-6 space-y-6">
+
+    <!-- Dashboard KPI Summary Cards -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <!-- Total Logs -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500 dark:text-slate-400" data-i18n="statTotal">Total Logs</p>
+          <p id="statTotalCount" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-1">0</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Completed -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500 dark:text-slate-400" data-i18n="statCompleted">Completed</p>
+          <p id="statCompletedCount" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- In Progress -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500 dark:text-slate-400" data-i18n="statInProgress">In Progress</p>
+          <p id="statInProgressCount" class="text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">0</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Not Started -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-500 dark:text-slate-400" data-i18n="statNotStarted">Not Started</p>
+          <p id="statNotStartedCount" class="text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">0</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Grid: Left Entry Form + Right Logs Feed -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- ==================== DAILY WORK ENTRY FORM (LEFT 5 COLS) ==================== -->
+      <section id="entryFormSection" class="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-4 sm:p-6">
+        <div class="flex items-center justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-2">
+            <span id="formModeBadge" class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+            <h2 id="formHeading" class="text-base sm:text-lg font-bold text-slate-900 dark:text-white" data-i18n="newEntryHeading">
+              New Work / Document Entry
+            </h2>
+          </div>
+          <button
+            type="button"
+            id="fillNowBtn"
+            class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/40 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800 transition shrink-0"
+            data-i18n="todayNowBtn"
+          >
+            Today / Now
+          </button>
+        </div>
+
+        <form id="workLogForm" class="mt-4 space-y-4">
+          <input type="hidden" id="editingLogId" value="" />
+
+          <!-- Date & Time Row (Mobile-Safe Non-Clipping) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="min-w-0">
+              <label for="logDate" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5" data-i18n="labelDate">
+                Date
+              </label>
+              <input
+                type="date"
+                id="logDate"
+                required
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div class="min-w-0">
+              <label for="logTime" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5" data-i18n="labelTime">
+                Time
+              </label>
+              <input
+                type="time"
+                id="logTime"
+                required
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <!-- Document Category Dropdown + Custom Input -->
+          <div>
+            <label for="logCategory" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5" data-i18n="labelCategory">
+              Document Category
+            </label>
+            <select
+              id="logCategory"
+              class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              <!-- Populated dynamically via JS -->
+            </select>
+
+            <!-- Custom Category Text Field (Shown when "custom" is selected) -->
+            <div id="customCategoryWrapper" class="hidden mt-2.5">
+              <input
+                type="text"
+                id="customCategoryInput"
+                maxlength="80"
+                class="w-full px-3 py-2.5 rounded-xl border border-blue-400 dark:border-blue-600 bg-blue-50/40 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                data-i18n-placeholder="customCategoryPlaceholder"
+                placeholder="Type custom document category..."
+              />
+            </div>
+          </div>
+
+          <!-- Document / Task Title -->
+          <div>
+            <label for="logTitle" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5" data-i18n="labelTitle">
+              Document / Task Title *
+            </label>
+            <input
+              type="text"
+              id="logTitle"
+              required
+              maxlength="160"
+              class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              data-i18n-placeholder="titlePlaceholder"
+              placeholder="e.g., Toyota Aqua PI checked & sent to bank"
+            />
+          </div>
+
+          <!-- Status Dropdown -->
+          <div>
+            <label for="logStatus" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5" data-i18n="labelStatus">
+              Work Status
+            </label>
+            <select
+              id="logStatus"
+              class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              <!-- Populated dynamically via JS -->
+            </select>
+          </div>
+
+          <!-- Notes / Details -->
+          <div>
+            <label for="logNotes" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5" data-i18n="labelNotes">
+              Notes / Details
+            </label>
+            <textarea
+              id="logNotes"
+              rows="3"
+              maxlength="2000"
+              class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y"
+              data-i18n-placeholder="notesPlaceholder"
+              placeholder="Add additional remarks, supplier notes, or follow-up details..."
+            ></textarea>
+          </div>
+
+          <!-- Screenshots / Photos Uploader (Up to 10) -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-300" data-i18n="labelPhotos">
+                Screenshots / Photos (Max 10)
+              </label>
+              <span id="photoCounterBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                0 / 10
+              </span>
+            </div>
+
+            <!-- Drag & Drop / File Picker / Paste Zone -->
+            <div
+              id="dropZone"
+              tabindex="0"
+              class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-4 text-center cursor-pointer bg-slate-50/70 dark:bg-slate-800/50 transition"
+            >
+              <input type="file" id="photoFileInput" accept="image/*" multiple class="hidden" />
+              <svg class="w-8 h-8 mx-auto text-blue-500 mb-1.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-200" data-i18n="dropzoneTitle">
+                Click to upload, drag & drop, or paste (Ctrl+V)
+              </p>
+              <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5" data-i18n="dropzoneSub">
+                Auto-compressed for crisp text & fast cloud sync
+              </p>
+            </div>
+
+            <!-- Attached Thumbnails Preview Grid -->
+            <div id="formPhotoPreviews" class="grid grid-cols-5 gap-2 mt-3 hidden"></div>
+          </div>
+
+          <!-- Submit / Cancel Buttons -->
+          <div class="pt-2 flex items-center gap-2.5">
+            <button
+              type="submit"
+              id="saveLogBtn"
+              class="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-600/20 transition active:scale-[0.99]"
+              data-i18n="saveEntryBtn"
+            >
+              Save Work Log
+            </button>
+            <button
+              type="button"
+              id="cancelEditBtn"
+              class="hidden py-3 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold transition"
+              data-i18n="cancelBtn"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ==================== LOGS LIST, FILTERS & EXPORTS (RIGHT 7 COLS) ==================== -->
+      <section class="lg:col-span-7 space-y-4">
+
+        <!-- Search, Filters & Export Bar -->
+        <div id="filterToolbar" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-4 space-y-3">
+          <!-- Top Row: Search + Storage Indicator -->
+          <div class="flex flex-col sm:flex-row gap-2.5">
+            <div class="relative flex-1">
+              <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                id="searchInput"
+                class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                data-i18n-placeholder="searchPlaceholder"
+                placeholder="Search logs by title, notes, or category..."
+              />
+            </div>
+
+            <!-- Storage & Sync Indicator Pill -->
+            <div class="flex items-center justify-between sm:justify-end gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-xs text-slate-600 dark:text-slate-300 shrink-0">
+              <svg class="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+              </svg>
+              <span id="storageIndicatorText" class="font-medium">0 logs • 0 KB</span>
+            </div>
+          </div>
+
+          <!-- Second Row: Status Filter, Category Filter, Date Filter -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <select
+              id="filterStatus"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <!-- Populated via JS -->
+            </select>
+
+            <select
+              id="filterCategory"
+              class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <!-- Populated via JS -->
+            </select>
+
+            <div class="flex items-center gap-1.5 min-w-0">
+              <input
+                type="date"
+                id="filterDate"
+                class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                id="clearFiltersBtn"
+                class="px-2.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 shrink-0"
+                title="Reset Filters"
+                data-i18n="resetBtn"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- Third Row: Export & Backup Toolbar -->
+          <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                id="exportCsvBtn"
+                class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition"
+                data-i18n="exportCsv"
+              >
+                Export CSV (Excel)
+              </button>
+              <button
+                type="button"
+                id="exportJsonBtn"
+                class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition"
+                data-i18n="backupJson"
+              >
+                JSON Backup
+              </button>
+              <label
+                for="restoreJsonInput"
+                class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer transition"
+                data-i18n="restoreJson"
+              >
+                Restore JSON
+              </label>
+              <input type="file" id="restoreJsonInput" accept=".json,application/json" class="hidden" />
+            </div>
+
+            <button
+              type="button"
+              id="printReportBtn"
+              class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-1.5 transition"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              <span data-i18n="printReport">Print / PDF Report</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Work Logs List Container -->
+        <div id="logsListContainer" class="space-y-3">
+          <!-- Rendered dynamically via JS -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="no-print border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-4 px-4 text-center text-xs text-slate-500 dark:text-slate-400">
+    <p>Yunikon Auto — Japanese Vehicle Import Documentation & Daily Operations Portal • Offline IndexedDB + Google Drive Cloud Sync</p>
+  </footer>
+
+  <!-- ==================== LIGHTBOX IMAGE VIEWER MODAL ==================== -->
+  <div id="lightboxModal" class="fixed inset-0 z-50 hidden bg-slate-950/95 backdrop-blur-sm flex flex-col">
+    <!-- Lightbox Header -->
+    <div class="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-800 text-white">
+      <div class="flex items-center gap-3 min-w-0">
+        <span id="lightboxCounter" class="px-2.5 py-1 rounded-lg bg-slate-800 text-xs font-bold">1 / 1</span>
+        <p id="lightboxTitle" class="text-sm font-medium truncate text-slate-300"></p>
+      </div>
+      <div class="flex items-center gap-2">
+        <a
+          id="lightboxDownloadBtn"
+          href="#"
+          download="yunikon-auto-doc.jpg"
+          class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 transition"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span data-i18n="downloadBtn">Download</span>
+        </a>
+        <button
+          type="button"
+          id="closeLightboxBtn"
+          class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Lightbox Image Stage -->
+    <div class="relative flex-1 flex items-center justify-center p-4 overflow-hidden select-none">
+      <button
+        type="button"
+        id="lightboxPrevBtn"
+        class="absolute left-3 sm:left-6 z-10 p-3 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white shadow-lg transition"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <img
+        id="lightboxImage"
+        src=""
+        alt="Document Preview"
+        class="max-h-full max-w-full object-contain rounded-xl shadow-2xl"
+      />
+
+      <button
+        type="button"
+        id="lightboxNextBtn"
+        class="absolute right-3 sm:right-6 z-10 p-3 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white shadow-lg transition"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== GOOGLE DRIVE CLOUD SYNC MODAL ==================== -->
+  <div id="driveModal" class="fixed inset-0 z-40 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 space-y-4 animate-entry max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-6 h-6 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm1.73 0l6.56 11.5h6.85L16.29 3.5H9.44zm6.27 12.5H2.58l3.43 6h13.13l-3.43-6z"/>
+          </svg>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white" data-i18n="driveModalTitle">
+            Google Drive Cloud Database
+          </h3>
+        </div>
+        <button type="button" class="close-modal p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed" data-i18n="driveModalDesc">
+        Connect your Google Account to store all Yunikon Auto work logs & screenshots inside a dedicated folder (Yunikon_Auto_Work_Logs_DB) in your Google Drive.
+      </p>
+
+      <!-- Google OAuth Client ID Input -->
+      <div>
+        <label for="googleClientIdInput" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5" data-i18n="googleClientIdLabel">
+          Google OAuth 2.0 Client ID
+        </label>
+        <input
+          type="text"
+          id="googleClientIdInput"
+          placeholder="1234567890-xxxxxxxx.apps.googleusercontent.com"
+          class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none"
+        />
+        <p class="text-[11px] text-slate-400 mt-1" data-i18n="googleClientIdHint">
+          Need a free Client ID? Click "Setup Guide" in the top bar for 2-minute instructions.
+        </p>
+      </div>
+
+      <!-- Connection Status Box -->
+      <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-1.5 text-xs">
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500 dark:text-slate-400" data-i18n="driveStatusLabel">Connection Status:</span>
+          <span id="driveModalStatusText" class="font-bold text-slate-700 dark:text-slate-200">Not Connected</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500 dark:text-slate-400" data-i18n="driveLastSyncLabel">Last Cloud Sync:</span>
+          <span id="driveLastSyncText" class="font-medium text-slate-700 dark:text-slate-200">Never</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500 dark:text-slate-400">Database File:</span>
+          <span class="font-mono text-[11px] text-blue-600 dark:text-blue-400">yunikon_auto_logs_db.json</span>
+        </div>
+      </div>
+
+      <!-- Auto-Sync Toggle -->
+      <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+        <div>
+          <p class="text-xs font-semibold text-slate-800 dark:text-slate-200" data-i18n="autoSyncLabel">Auto-Sync on Every Save / Edit / Delete</p>
+          <p class="text-[11px] text-slate-400" data-i18n="autoSyncSub">Automatically pushes updates to Google Drive when connected</p>
+        </div>
+        <input type="checkbox" id="autoSyncCheckbox" checked class="w-4 h-4 accent-blue-600 rounded" />
+      </label>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+        <button
+          type="button"
+          id="connectDriveBtn"
+          class="py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition"
+          data-i18n="connectDriveBtn"
+        >
+          Connect Google Drive
+        </button>
+        <button
+          type="button"
+          id="syncDriveNowModalBtn"
+          class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition"
+          data-i18n="syncBidirectionalBtn"
+        >
+          Sync & Merge Now
+        </button>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+        <button type="button" id="disconnectDriveBtn" class="text-rose-600 hover:underline font-semibold" data-i18n="disconnectDriveBtn">
+          Disconnect Account
+        </button>
+        <button type="button" class="close-modal px-4 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-200" data-i18n="closeBtn">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECURITY PIN SETTINGS MODAL ==================== -->
+  <div id="securityModal" class="fixed inset-0 z-40 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 space-y-4 animate-entry">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white" data-i18n="securityModalTitle">
+          Workspace PIN & Security
+        </h3>
+        <button type="button" class="close-modal p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed" data-i18n="securityModalDesc">
+        Protect your GitHub Pages workspace with a SHA-256 encrypted PIN code so unauthorized visitors cannot view or edit Yunikon Auto records.
+      </p>
+
+      <form id="setPinForm" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1" data-i18n="newPinLabel">
+            New PIN (4 to 12 digits)
+          </label>
+          <input
+            type="password"
+            id="newPinInput"
+            inputmode="numeric"
+            minlength="4"
+            maxlength="12"
+            placeholder="e.g., 2026"
+            class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm tracking-widest outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1" data-i18n="confirmPinLabel">
+            Confirm PIN
+          </label>
+          <input
+            type="password"
+            id="confirmPinInput"
+            inputmode="numeric"
+            minlength="4"
+            maxlength="12"
+            placeholder="••••"
+            class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm tracking-widest outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1" data-i18n="autoLockLabel">
+            Auto-Lock Inactivity Timeout
+          </label>
+          <select
+            id="autoLockMinutesSelect"
+            class="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium outline-none"
+          >
+            <option value="0">Disabled (Manual lock only)</option>
+            <option value="5">After 5 minutes</option>
+            <option value="15" selected>After 15 minutes</option>
+            <option value="30">After 30 minutes</option>
+            <option value="60">After 60 minutes</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button
+            type="submit"
+            class="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition"
+            data-i18n="savePinBtn"
+          >
+            Save & Enable PIN
+          </button>
+          <button
+            type="button"
+            id="removePinBtn"
+            class="py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-semibold border border-rose-200 dark:border-rose-900 transition"
+            data-i18n="removePinBtn"
+          >
+            Remove PIN
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== GITHUB PAGES & GOOGLE DRIVE SETUP GUIDE MODAL ==================== -->
+  <div id="guideModal" class="fixed inset-0 z-40 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 space-y-4 animate-entry max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white" data-i18n="guideModalTitle">
+          GitHub Pages & Google Drive Setup Guide
+        </h3>
+        <button type="button" class="close-modal p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+        <!-- Step 1: GitHub Pages -->
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+          <h4 class="font-bold text-blue-600 dark:text-blue-400 text-sm" data-i18n="guideStep1Title">
+            Step 1: Free Hosting on GitHub Pages
+          </h4>
+          <ol class="list-decimal list-inside space-y-1 text-xs" data-i18n="guideStep1List">
+            <li>Create a new GitHub repository (e.g., <strong>yunikon-auto-logs</strong>).</li>
+            <li>Upload this single <strong>index.html</strong> file to the root of the repository.</li>
+            <li>Go to <strong>Settings → Pages</strong>, select branch <strong>main</strong> and folder <strong>/ (root)</strong>, then click <strong>Save</strong>.</li>
+            <li>Your live HTTPS URL (e.g., <code>https://username.github.io/yunikon-auto-logs/</code>) will be ready in 60 seconds!</li>
+          </ol>
+        </div>
+
+        <!-- Step 2: Google Drive API -->
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+          <h4 class="font-bold text-emerald-600 dark:text-emerald-400 text-sm" data-i18n="guideStep2Title">
+            Step 2: Connect Google Drive Cloud Database (100% Free)
+          </h4>
+          <ol class="list-decimal list-inside space-y-1 text-xs" data-i18n="guideStep2List">
+            <li>Open <strong>console.cloud.google.com</strong> and create a free project named <strong>Yunikon Auto DB</strong>.</li>
+            <li>Go to <strong>APIs & Services → Library</strong>, search for <strong>Google Drive API</strong>, and click <strong>Enable</strong>.</li>
+            <li>Go to <strong>OAuth consent screen</strong> → Choose <strong>External</strong> → Add your Gmail address under <strong>Test users</strong>.</li>
+            <li>Go to <strong>Credentials → Create Credentials → OAuth client ID → Web application</strong>.</li>
+            <li>Under <strong>Authorized JavaScript origins</strong>, add your GitHub Pages URL (e.g., <code>https://username.github.io</code>) and/or <code>http://localhost</code>.</li>
+            <li>Copy the generated <strong>Client ID</strong>, click <strong>Google Drive</strong> in the top bar of this app, paste it, and click <strong>Connect Google Drive</strong>!</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button type="button" class="close-modal px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold" data-i18n="gotItBtn">
+          Got It
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CUSTOM CONFIRMATION DIALOG MODAL ==================== -->
+  <div id="confirmModal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 space-y-4 animate-entry">
+      <h3 id="confirmModalTitle" class="text-base font-bold text-slate-900 dark:text-white">Confirm Action</h3>
+      <p id="confirmModalMessage" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button
+          type="button"
+          id="confirmCancelBtn"
+          class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200"
+          data-i18n="cancelBtn"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          id="confirmOkBtn"
+          class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold"
+          data-i18n="confirmBtn"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION CONTAINER ==================== -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-[calc(100%-2rem)] pointer-events-none"></div>
+
+  <!-- ==================== APPLICATION JAVASCRIPT ==================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* =========================================================================
+         1. BILINGUAL DICTIONARY (SINHALA & ENGLISH)
+      ========================================================================= */
+      const I18N = {
+        en: {
+          appSubtitle: 'Daily Work & Vehicle Import Documentation',
+          driveBtnLabel: 'Google Drive',
+          syncNow: 'Sync',
+          securityBtn: 'Security',
+          guideBtn: 'Setup Guide',
+          statTotal: 'Total Logs',
+          statCompleted: 'Completed',
+          statInProgress: 'In Progress',
+          statNotStarted: 'Not Started',
+          newEntryHeading: 'New Work / Document Entry',
+          editEntryHeading: 'Edit Work / Document Entry',
+          todayNowBtn: 'Today / Now',
+          labelDate: 'Date',
+          labelTime: 'Time',
+          labelCategory: 'Document Category',
+          customCategoryPlaceholder: 'Type custom document category...',
+          labelTitle: 'Document / Task Title *',
+          titlePlaceholder: 'e.g., Toyota Aqua PI checked & sent to bank',
+          labelStatus: 'Work Status',
+          labelNotes: 'Notes / Details',
+          notesPlaceholder: 'Add supplier remarks, bank details, or follow-up notes...',
+          labelPhotos: 'Screenshots / Photos (Max 10)',
+          dropzoneTitle: 'Click to upload, drag & drop, or paste (Ctrl+V)',
+          dropzoneSub: 'Auto-compressed for sharp document readability & cloud sync',
+          saveEntryBtn: 'Save Work Log',
+          updateEntryBtn: 'Update Work Log',
+          cancelBtn: 'Cancel',
+          searchPlaceholder: 'Search logs by title, notes, or category...',
+          resetBtn: 'Reset',
+          exportCsv: 'Export CSV (Excel)',
+          backupJson: 'JSON Backup',
+          restoreJson: 'Restore JSON',
+          printReport: 'Print / PDF Report',
+          allStatuses: 'All Statuses',
+          allCategories: 'All Categories',
+          statusCompleted: 'Completed',
+          statusInProgress: 'In Progress / Not Completed',
+          statusNotStarted: 'Not Started Yet',
+          catPI: 'Proforma Invoice (PI)',
+          catLC: 'Letter of Credit (LC)',
+          catBL: 'Bill of Lading (BL)',
+          catRoRo: 'RoRo Stock List',
+          catCustoms: 'Customs Clearing',
+          catDrive: 'Google Drive Update',
+          catAuction: 'Export Certificate / Auction Sheet',
+          catBank: 'Bank / TT Payment',
+          catCustom: 'Custom (Type Manually)',
+          editBtn: 'Edit',
+          duplicateBtn: 'Duplicate',
+          deleteBtn: 'Delete',
+          downloadBtn: 'Download',
+          emptyTitle: 'No work logs found',
+          emptySub: 'Add your first daily vehicle import documentation log using the form.',
+          lockTitle: 'Yunikon Auto Security Lock',
+          lockSubtitle: 'Enter your security PIN to access daily work logs',
+          unlockBtn: 'Unlock Workspace',
+          wrongPinError: 'Incorrect PIN. Please try again.',
+          driveModalTitle: 'Google Drive Cloud Database',
+          driveModalDesc: 'Connect your Google Account to store all Yunikon Auto work logs & screenshots inside a dedicated folder (Yunikon_Auto_Work_Logs_DB) in your Google Drive.',
+          googleClientIdLabel: 'Google OAuth 2.0 Client ID',
+          googleClientIdHint: 'Need a free Client ID? Click "Setup Guide" in the top bar for 2-minute instructions.',
+          driveStatusLabel: 'Connection Status:',
+          driveLastSyncLabel: 'Last Cloud Sync:',
+          autoSyncLabel: 'Auto-Sync on Every Save / Edit / Delete',
+          autoSyncSub: 'Automatically pushes updates to Google Drive when connected',
+          connectDriveBtn: 'Connect Google Drive',
+          syncBidirectionalBtn: 'Sync & Merge Now',
+          disconnectDriveBtn: 'Disconnect Account',
+          closeBtn: 'Close',
+          securityModalTitle: 'Workspace PIN & Security',
+          securityModalDesc: 'Protect your GitHub Pages workspace with a SHA-256 encrypted PIN code so unauthorized visitors cannot view or edit Yunikon Auto records.',
+          newPinLabel: 'New PIN (4 to 12 digits)',
+          confirmPinLabel: 'Confirm PIN',
+          autoLockLabel: 'Auto-Lock Inactivity Timeout',
+          savePinBtn: 'Save & Enable PIN',
+          removePinBtn: 'Remove PIN',
+          guideModalTitle: 'GitHub Pages & Google Drive Setup Guide',
+          guideStep1Title: 'Step 1: Free Hosting on GitHub Pages',
+          guideStep1List: `
+            <li>Create a new GitHub repository (e.g., <strong>yunikon-auto-logs</strong>).</li>
+            <li>Upload this single <strong>index.html</strong> file to the root of the repository.</li>
+            <li>Go to <strong>Settings → Pages</strong>, select branch <strong>main</strong> and folder <strong>/ (root)</strong>, then click <strong>Save</strong>.</li>
+            <li>Your live HTTPS URL (e.g., <code>https://username.github.io/yunikon-auto-logs/</code>) will be ready in 60 seconds!</li>
+          `,
+          guideStep2Title: 'Step 2: Connect Google Drive Cloud Database (100% Free)',
+          guideStep2List: `
+            <li>Open <strong>console.cloud.google.com</strong> and create a free project named <strong>Yunikon Auto DB</strong>.</li>
+            <li>Go to <strong>APIs & Services → Library</strong>, search for <strong>Google Drive API</strong>, and click <strong>Enable</strong>.</li>
+            <li>Go to <strong>OAuth consent screen</strong> → Choose <strong>External</strong> → Add your Gmail address under <strong>Test users</strong>.</li>
+            <li>Go to <strong>Credentials → Create Credentials → OAuth client ID → Web application</strong>.</li>
+            <li>Under <strong>Authorized JavaScript origins</strong>, add your GitHub Pages URL (e.g., <code>https://username.github.io</code>) and/or <code>http://localhost</code>.</li>
+            <li>Copy the generated <strong>Client ID</strong>, click <strong>Google Drive</strong> in the top bar of this app, paste it, and click <strong>Connect Google Drive</strong>!</li>
+          `,
+          gotItBtn: 'Got It',
+          confirmBtn: 'Confirm',
+          toastMaxPhotos: 'Maximum 10 screenshots allowed per log entry!',
+          toastSaved: 'Work log saved successfully!',
+          toastUpdated: 'Work log updated successfully!',
+          toastDuplicated: 'Log duplicated! Review and click Save.',
+          toastDeleted: 'Work log deleted.',
+          toastCustomCatRequired: 'Please type a custom category name.',
+          toastPinSaved: 'Security PIN enabled successfully!',
+          toastPinMismatch: 'PINs do not match or must be 4-12 digits.',
+          toastPinRemoved: 'Security PIN removed.',
+          toastDriveConnected: 'Connected to Google Drive & synced!',
+          toastDriveSynced: 'Google Drive database synced successfully!',
+          toastDriveNoClient: 'Please enter your Google OAuth Client ID first.',
+          toastBackupExported: 'JSON backup downloaded.',
+          toastCsvExported: 'Excel UTF-8 CSV exported.',
+          toastRestored: 'Backup restored successfully!',
+          confirmDeleteTitle: 'Delete Work Log?',
+          confirmDeleteMsg: 'Are you sure you want to delete this entry? This will also sync to Google Drive if connected.'
+        },
+        si: {
+          appSubtitle: 'දෛනික වැඩ සහ වාහන ආනයන ලේඛන කළමනාකරණය',
+          driveBtnLabel: 'Google Drive',
+          syncNow: 'Sync',
+          securityBtn: 'ආරක්ෂාව',
+          guideBtn: 'සැකසුම් උපදෙස්',
+          statTotal: 'මුළු සටහන්',
+          statCompleted: 'කම්ප්ලීට් කරලා',
+          statInProgress: 'කර කර ඉන්නවා',
+          statNotStarted: 'පටන් ගත්තේ නැහැ',
+          newEntryHeading: 'නව කාර්ය / ඩොකියුමන්ට් සටහනක්',
+          editEntryHeading: 'සටහන සංස්කරණය කරන්න (Edit)',
+          todayNowBtn: 'අද / දැන්',
+          labelDate: 'දිනය / Date',
+          labelTime: 'වේලාව / Time',
+          labelCategory: 'ඩොකියුමන්ට් වර්ගය / Category',
+          customCategoryPlaceholder: 'වෙනත් ඩොකියුමන්ට් වර්ගය අතින් ටයිප් කරන්න...',
+          labelTitle: 'කාර්යයේ / ඩොකියුමන්ට් එකේ නම *',
+          titlePlaceholder: 'උදා: Toyota Aqua PI පරීක්ෂා කර බැංකුවට යැව්වා',
+          labelStatus: 'තත්ත්වය / Status',
+          labelNotes: 'විස්තරය / Notes',
+          notesPlaceholder: 'අමතර විස්තර, සැපයුම්කරුගේ සටහන් හෝ ඉදිරි පියවර ලියන්න...',
+          labelPhotos: 'ස්ක්‍රීන්ෂොට් / ඡායාරූප (උපරිම 10)',
+          dropzoneTitle: 'ඡායාරූප තෝරන්න, ඇද දමන්න, හෝ Paste (Ctrl+V) කරන්න',
+          dropzoneSub: 'පැහැදිලිව කියවිය හැකි පරිදි ස්වයංක්‍රීයව Compress වේ',
+          saveEntryBtn: 'සටහන සුරකින්න (Save)',
+          updateEntryBtn: 'යාවත්කාලීන කරන්න (Update)',
+          cancelBtn: 'අවලංගු කරන්න',
+          searchPlaceholder: 'නම, විස්තරය හෝ වර්ගය අනුව සොයන්න...',
+          resetBtn: 'Reset',
+          exportCsv: 'CSV (Excel) ගන්න',
+          backupJson: 'JSON Backup',
+          restoreJson: 'Restore JSON',
+          printReport: 'Print / PDF වාර්තාව',
+          allStatuses: 'සියලුම තත්ත්වයන්',
+          allCategories: 'සියලුම වර්ග',
+          statusCompleted: 'කම්ප්ලීට් කරලා',
+          statusInProgress: 'කර කර ඉන්නවා - තාම කම්ප්ලීට් නැහැ',
+          statusNotStarted: 'තාම පටන් ගත්තේ නැහැ',
+          catPI: 'Proforma Invoice (PI)',
+          catLC: 'Letter of Credit (LC)',
+          catBL: 'Bill of Lading (BL)',
+          catRoRo: 'RoRo Stock List',
+          catCustoms: 'Customs Clearing',
+          catDrive: 'Google Drive Update',
+          catAuction: 'Export Certificate / Auction Sheet',
+          catBank: 'Bank / TT Payment',
+          catCustom: 'වෙනත් (අතින් ටයිප් කරන්න)',
+          editBtn: 'Edit',
+          duplicateBtn: 'Duplicate',
+          deleteBtn: 'Delete',
+          downloadBtn: 'බාගන්න',
+          emptyTitle: 'තවම වැඩ සටහන් නොමැත',
+          emptySub: 'වම්පස ඇති පෝරමය භාවිතා කර ඔබගේ පළමු දෛනික සටහන ඇතුළත් කරන්න.',
+          lockTitle: 'Yunikon Auto ආරක්ෂක අගුල',
+          lockSubtitle: 'දෛනික සටහන් බැලීමට ඔබගේ රහස් PIN අංකය ඇතුළත් කරන්න',
+          unlockBtn: 'ඇතුළු වන්න (Unlock)',
+          wrongPinError: 'PIN අංකය වැරදියි. නැවත උත්සාහ කරන්න.',
+          driveModalTitle: 'Google Drive Cloud Database',
+          driveModalDesc: 'Yunikon Auto සියලුම වැඩ සටහන් සහ ස්ක්‍රීන්ෂොට් ඔබගේ Google Drive හි (Yunikon_Auto_Work_Logs_DB) ෆෝල්ඩරය තුළ සුරක්ෂිතව තබා ගැනීමට සම්බන්ධ කරන්න.',
+          googleClientIdLabel: 'Google OAuth 2.0 Client ID',
+          googleClientIdHint: 'Client ID එකක් සාදා ගැනීමට ඉහළ ඇති "සැකසුම් උපදෙස්" බලන්න.',
+          driveStatusLabel: 'සම්බන්ධතා තත්ත්වය:',
+          driveLastSyncLabel: 'අවසන් Cloud Sync:',
+          autoSyncLabel: 'සෑම Save / Edit / Delete කිරීමකදීම Auto-Sync කරන්න',
+          autoSyncSub: 'සම්බන්ධ වී ඇති විට ස්වයංක්‍රීයව Google Drive යාවත්කාලීන කරයි',
+          connectDriveBtn: 'Google Drive සම්බන්ධ කරන්න',
+          syncBidirectionalBtn: 'දැන් Sync කරන්න',
+          disconnectDriveBtn: 'සම්බන්ධතාවය ඉවත් කරන්න',
+          closeBtn: 'වසන්න',
+          securityModalTitle: 'PIN අංකය සහ ආරක්ෂාව',
+          securityModalDesc: 'වෙනත් අයට ඔබගේ GitHub Pages වෙබ් අඩවිය විවෘත කර Yunikon Auto දත්ත බැලීම වැළැක්වීමට SHA-256 PIN අංකයක් යොදන්න.',
+          newPinLabel: 'නව PIN අංකය (ඉලක්කම් 4 - 12)',
+          confirmPinLabel: 'PIN අංකය තහවුරු කරන්න',
+          autoLockLabel: 'ස්වයංක්‍රීයව අගුළු වැටෙන වේලාව',
+          savePinBtn: 'PIN අංකය සුරකින්න',
+          removePinBtn: 'PIN ඉවත් කරන්න',
+          guideModalTitle: 'GitHub Pages & Google Drive සැකසුම් උපදෙස්',
+          guideStep1Title: 'පියවර 1: GitHub Pages හි නොමිලේ Host කිරීම',
+          guideStep1List: `
+            <li>GitHub හි නව Repository එකක් සාදන්න (උදා: <strong>yunikon-auto-logs</strong>).</li>
+            <li>මෙම <strong>index.html</strong> ගොනුව එයට Upload කරන්න.</li>
+            <li><strong>Settings → Pages</strong> වෙත ගොස් <strong>main</strong> branch එක තෝරා <strong>Save</strong> ඔබන්න.</li>
+            <li>තත්පර 60කින් ඔබගේ HTTPS වෙබ් ලිපිනය සූදානම් වනු ඇත!</li>
+          `,
+          guideStep2Title: 'පියවර 2: Google Drive Cloud Database සම්බන්ධ කිරීම (100% නොමිලේ)',
+          guideStep2List: `
+            <li><strong>console.cloud.google.com</strong> වෙත ගොස් <strong>Yunikon Auto DB</strong> නමින් Project එකක් සාදන්න.</li>
+            <li><strong>APIs & Services → Library</strong> තුළ <strong>Google Drive API</strong> සොයා <strong>Enable</strong> කරන්න.</li>
+            <li><strong>OAuth consent screen</strong> → <strong>External</strong> තෝරා <strong>Test users</strong> යටතේ ඔබගේ Gmail ලිපිනය එක් කරන්න.</li>
+            <li><strong>Credentials → Create Credentials → OAuth client ID → Web application</strong> තෝරන්න.</li>
+            <li><strong>Authorized JavaScript origins</strong> යටතේ ඔබගේ GitHub Pages URL එක (උදා: <code>https://username.github.io</code>) එක් කරන්න.</li>
+            <li>ලැබෙන <strong>Client ID</strong> එක Copy කර මෙම ඇප් එකේ <strong>Google Drive</strong> බොත්තම ඔබා Paste කර සම්බන්ධ කරන්න!</li>
+          `,
+          gotItBtn: 'පැහැදිලියි',
+          confirmBtn: 'තහවුරු කරන්න',
+          toastMaxPhotos: 'එක් සටහනකට උපරිම ස්ක්‍රීන්ෂොට් 10ක් පමණක් එක් කළ හැක!',
+          toastSaved: 'වැඩ සටහන සාර්ථකව සුරැකුණි!',
+          toastUpdated: 'වැඩ සටහන යාවත්කාලීන කරන ලදී!',
+          toastDuplicated: 'සටහන පිටපත් විය! පරීක්ෂා කර Save ඔබන්න.',
+          toastDeleted: 'සටහන මකා දමන ලදී.',
+          toastCustomCatRequired: 'කරුණාකර වෙනත් ඩොකියුමන්ට් වර්ගය ටයිප් කරන්න.',
+          toastPinSaved: 'ආරක්ෂක PIN අංකය සක්‍රිය කරන ලදී!',
+          toastPinMismatch: 'PIN අංක නොගැලපේ (ඉලක්කම් 4-12ක් විය යුතුය).',
+          toastPinRemoved: 'PIN අංකය ඉවත් කරන ලදී.',
+          toastDriveConnected: 'Google Drive සාර්ථකව සම්බන්ධ වී Sync විය!',
+          toastDriveSynced: 'Google Drive දත්ත සමුදාය සාර්ථකව Sync විය!',
+          toastDriveNoClient: 'කරුණාකර පළමුව Google OAuth Client ID ඇතුළත් කරන්න.',
+          toastBackupExported: 'JSON Backup ගොනුව බාගත විය.',
+          toastCsvExported: 'Excel UTF-8 CSV ගොනුව බාගත විය.',
+          toastRestored: 'Backup දත්ත සාර්ථකව ප්‍රතිසාධනය විය!',
+          confirmDeleteTitle: 'සටහන මකා දමන්නද?',
+          confirmDeleteMsg: 'ඔබට මෙම සටහන මකා දැමීමට අවශ්‍ය බව විශ්වාසද? Google Drive සම්බන්ධ නම් එයින්ද ඉවත් වනු ඇත.'
+        }
+      };
+
+      /* =========================================================================
+         2. APPLICATION STATE & CONSTANTS
+      ========================================================================= */
+      const DB_NAME = 'YunikonAutoDB';
+      const DB_VERSION = 1;
+      const STORE_NAME = 'work_logs';
+      const MAX_PHOTOS = 10;
+
+      const CATEGORIES = [
+        { value: 'Proforma Invoice (PI)', key: 'catPI' },
+        { value: 'Letter of Credit (LC)', key: 'catLC' },
+        { value: 'Bill of Lading (BL)', key: 'catBL' },
+        { value: 'RoRo Stock List', key: 'catRoRo' },
+        { value: 'Customs Clearing', key: 'catCustoms' },
+        { value: 'Google Drive Update', key: 'catDrive' },
+        { value: 'Export Certificate / Auction Sheet', key: 'catAuction' },
+        { value: 'Bank / TT Payment', key: 'catBank' },
+        { value: '__CUSTOM__', key: 'catCustom' }
+      ];
+
+      const STATUSES = [
+        { value: 'completed', key: 'statusCompleted' },
+        { value: 'in_progress', key: 'statusInProgress' },
+        { value: 'not_started', key: 'statusNotStarted' }
+      ];
+
+      let state = {
+        lang: localStorage.getItem('ya_lang') || 'si',
+        theme: localStorage.getItem('ya_theme') || 'light',
+        logs: [],
+        deletedIds: JSON.parse(localStorage.getItem('ya_deleted_ids') || '[]'),
+        currentPhotos: [],
+        lightboxPhotos: [],
+        lightboxIndex: 0,
+        lightboxTitle: '',
+        drive: {
+          clientId: localStorage.getItem('ya_gdrive_client_id') || '',
+          accessToken: null,
+          tokenExpiry: 0,
+          folderId: localStorage.getItem('ya_gdrive_folder_id') || null,
+          fileId: localStorage.getItem('ya_gdrive_file_id') || null,
+          lastSync: localStorage.getItem('ya_gdrive_last_sync') || null,
+          autoSync: localStorage.getItem('ya_gdrive_autosync') !== 'false',
+          isSyncing: false
+        },
+        security: {
+          pinHash: localStorage.getItem('ya_pin_hash') || '',
+          autoLockMinutes: parseInt(localStorage.getItem('ya_autolock_min') || '15', 10),
+          isLocked: false,
+          inactivityTimer: null
+        }
+      };
+
+      let dbInstance = null;
+      let tokenClient = null;
+
+      /* =========================================================================
+         3. SECURITY UTILITIES (XSS SANITIZATION, SHA-256 PIN, AUTO-LOCK)
+      ========================================================================= */
+      function escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      async function sha256(text) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode('YUNIKON_AUTO_SALT_' + text);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hashBuffer))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+      }
+
+      function lockWorkspace() {
+        if (!state.security.pinHash) return;
+        state.security.isLocked = true;
+        document.getElementById('unlockPinInput').value = '';
+        document.getElementById('unlockErrorMsg').classList.add('hidden');
+        document.getElementById('securityLockScreen').classList.remove('hidden');
+        setTimeout(() => document.getElementById('unlockPinInput').focus(), 100);
+      }
+
+      function unlockWorkspace() {
+        state.security.isLocked = false;
+        document.getElementById('securityLockScreen').classList.add('hidden');
+        resetInactivityTimer();
+      }
+
+      function resetInactivityTimer() {
+        if (state.security.inactivityTimer) {
+          clearTimeout(state.security.inactivityTimer);
+        }
+        if (state.security.pinHash && state.security.autoLockMinutes > 0 && !state.security.isLocked) {
+          state.security.inactivityTimer = setTimeout(() => {
+            lockWorkspace();
+          }, state.security.autoLockMinutes * 60 * 1000);
+        }
+      }
+
+      function updateSecurityUI() {
+        const hasPin = Boolean(state.security.pinHash);
+        const instantLockBtn = document.getElementById('instantLockBtn');
+        const headerLockIcon = document.getElementById('headerLockIcon');
+        if (hasPin) {
+          instantLockBtn.classList.remove('hidden');
+          headerLockIcon.classList.remove('text-slate-400');
+          headerLockIcon.classList.add('text-emerald-500');
+        } else {
+          instantLockBtn.classList.add('hidden');
+          headerLockIcon.classList.remove('text-emerald-500');
+          headerLockIcon.classList.add('text-amber-500');
+        }
+        document.getElementById('autoLockMinutesSelect').value = String(state.security.autoLockMinutes);
+      }
+
+      /* =========================================================================
+         4. INDEXEDDB HIGH-CAPACITY STORAGE ENGINE
+      ========================================================================= */
+      function initDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+              store.createIndex('date', 'date', { unique: false });
+              store.createIndex('updatedAt', 'updatedAt', { unique: false });
+            }
+          };
+          request.onsuccess = (e) => {
+            dbInstance = e.target.result;
+            resolve(dbInstance);
+          };
+          request.onerror = (e) => reject(e.target.error);
+        });
+      }
+
+      function dbGetAllLogs() {
+        return new Promise((resolve, reject) => {
+          const tx = dbInstance.transaction(STORE_NAME, 'readonly');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function dbPutLog(logObj) {
+        return new Promise((resolve, reject) => {
+          const tx = dbInstance.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.put(logObj);
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function dbDeleteLog(id) {
+        return new Promise((resolve, reject) => {
+          const tx = dbInstance.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.delete(id);
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function dbReplaceAllLogs(logsArray) {
+        return new Promise((resolve, reject) => {
+          const tx = dbInstance.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          store.clear();
+          logsArray.forEach(item => store.put(item));
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      /* =========================================================================
+         5. GOOGLE DRIVE REST API V3 CLOUD DATABASE ENGINE
+      ========================================================================= */
+      const DRIVE_FOLDER_NAME = 'Yunikon_Auto_Work_Logs_DB';
+      const DRIVE_DB_FILENAME = 'yunikon_auto_logs_db.json';
+      const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+
+      function updateDriveUI() {
+        const dot = document.getElementById('driveStatusDot');
+        const modalStatus = document.getElementById('driveModalStatusText');
+        const lastSyncEl = document.getElementById('driveLastSyncText');
+        const quickSyncBtn = document.getElementById('quickSyncBtn');
+        const quickSyncIcon = document.getElementById('quickSyncIcon');
+
+        const isConnected = Boolean(state.drive.accessToken && Date.now() < state.drive.tokenExpiry);
+
+        if (state.drive.isSyncing) {
+          dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping';
+          modalStatus.textContent = state.lang === 'si' ? 'Sync වෙමින් පවතී...' : 'Syncing...';
+          quickSyncIcon.classList.add('animate-spin');
+        } else if (isConnected) {
+          dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+          modalStatus.textContent = state.lang === 'si' ? 'සම්බන්ධයි (Connected)' : 'Connected';
+          modalStatus.className = 'font-bold text-emerald-600 dark:text-emerald-400';
+          quickSyncBtn.classList.remove('hidden');
+          quickSyncBtn.classList.add('flex');
+          quickSyncIcon.classList.remove('animate-spin');
+        } else {
+          dot.className = state.drive.clientId ? 'w-2.5 h-2.5 rounded-full bg-amber-500' : 'w-2.5 h-2.5 rounded-full bg-slate-400';
+          modalStatus.textContent = state.lang === 'si' ? 'සම්බන්ධ නැත (Offline Mode)' : 'Not Connected (Offline Mode)';
+          modalStatus.className = 'font-bold text-slate-600 dark:text-slate-300';
+          quickSyncBtn.classList.add('hidden');
+          quickSyncBtn.classList.remove('flex');
+          quickSyncIcon.classList.remove('animate-spin');
+        }
+
+        lastSyncEl.textContent = state.drive.lastSync
+          ? new Date(state.drive.lastSync).toLocaleString()
+          : (state.lang === 'si' ? 'තවම නැත' : 'Never');
+      }
+
+      function requestDriveAccessToken(interactive = true) {
+        return new Promise((resolve, reject) => {
+          const clientId = document.getElementById('googleClientIdInput').value.trim() || state.drive.clientId;
+          if (!clientId) {
+            showToast(t('toastDriveNoClient'), 'error');
+            return reject(new Error('Missing Client ID'));
+          }
+          state.drive.clientId = clientId;
+          localStorage.setItem('ya_gdrive_client_id', clientId);
+
+          if (!window.google || !google.accounts || !google.accounts.oauth2) {
+            showToast('Google Identity Services script still loading. Try again in 2 seconds.', 'error');
+            return reject(new Error('GIS not loaded'));
+          }
+
+          tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: DRIVE_SCOPE,
+            callback: (resp) => {
+              if (resp.error) {
+                reject(resp);
+                return;
+              }
+              state.drive.accessToken = resp.access_token;
+              state.drive.tokenExpiry = Date.now() + ((resp.expires_in || 3500) * 1000);
+              updateDriveUI();
+              resolve(resp.access_token);
+            }
+          });
+
+          tokenClient.requestAccessToken({ prompt: interactive ? 'consent' : '' });
+        });
+      }
+
+      async function driveFetch(url, options = {}) {
+        if (!state.drive.accessToken || Date.now() >= state.drive.tokenExpiry) {
+          await requestDriveAccessToken(false);
+        }
+        const headers = Object.assign({}, options.headers || {}, {
+          Authorization: `Bearer ${state.drive.accessToken}`
+        });
+        const res = await fetch(url, Object.assign({}, options, { headers }));
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Drive API Error (${res.status}): ${errText}`);
+        }
+        return res;
+      }
+
+      async function ensureDriveFolder() {
+        if (state.drive.folderId) {
+          try {
+            const check = await driveFetch(`https://www.googleapis.com/drive/v3/files/${state.drive.folderId}?fields=id,trashed`);
+            const meta = await check.json();
+            if (meta && meta.id && !meta.trashed) return meta.id;
+          } catch (_) {
+            state.drive.folderId = null;
+          }
+        }
+
+        const q = encodeURIComponent(`name='${DRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+        const searchRes = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+        const searchData = await searchRes.json();
+
+        if (searchData.files && searchData.files.length > 0) {
+          state.drive.folderId = searchData.files[0].id;
+          localStorage.setItem('ya_gdrive_folder_id', state.drive.folderId);
+          return state.drive.folderId;
+        }
+
+        const createRes = await driveFetch('https://www.googleapis.com/drive/v3/files', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: DRIVE_FOLDER_NAME,
+            mimeType: 'application/vnd.google-apps.folder'
+          })
+        });
+        const created = await createRes.json();
+        state.drive.folderId = created.id;
+        localStorage.setItem('ya_gdrive_folder_id', state.drive.folderId);
+        return state.drive.folderId;
+      }
+
+      async function findDriveDbFile(folderId) {
+        if (state.drive.fileId) {
+          try {
+            const check = await driveFetch(`https://www.googleapis.com/drive/v3/files/${state.drive.fileId}?fields=id,trashed`);
+            const meta = await check.json();
+            if (meta && meta.id && !meta.trashed) return meta.id;
+          } catch (_) {
+            state.drive.fileId = null;
+          }
+        }
+
+        const q = encodeURIComponent(`name='${DRIVE_DB_FILENAME}' and '${folderId}' in parents and trashed=false`);
+        const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+        const data = await res.json();
+        if (data.files && data.files.length > 0) {
+          state.drive.fileId = data.files[0].id;
+          localStorage.setItem('ya_gdrive_file_id', state.drive.fileId);
+          return state.drive.fileId;
+        }
+        return null;
+      }
+
+      async function uploadJsonToDrive(folderId, existingFileId, payloadObj) {
+        const boundary = '-------yunikon_auto_boundary_' + Date.now();
+        const metadata = existingFileId
+          ? { name: DRIVE_DB_FILENAME, mimeType: 'application/json' }
+          : { name: DRIVE_DB_FILENAME, mimeType: 'application/json', parents: [folderId] };
+
+        const body =
+          `--${boundary}\r\n` +
+          `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+          `${JSON.stringify(metadata)}\r\n` +
+          `--${boundary}\r\n` +
+          `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+          `${JSON.stringify(payloadObj)}\r\n` +
+          `--${boundary}--`;
+
+        const url = existingFileId
+          ? `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=multipart`
+          : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+
+        const method = existingFileId ? 'PATCH' : 'POST';
+        const res = await driveFetch(url, {
+          method,
+          headers: { 'Content-Type': `multipart/related; boundary="${boundary}"` },
+          body
+        });
+        const result = await res.json();
+        state.drive.fileId = result.id;
+        localStorage.setItem('ya_gdrive_file_id', result.id);
+        return result.id;
+      }
+
+      async function syncWithGoogleDrive(silent = false) {
+        if (!state.drive.accessToken || Date.now() >= state.drive.tokenExpiry) return;
+        if (state.drive.isSyncing) return;
+
+        state.drive.isSyncing = true;
+        updateDriveUI();
+
+        try {
+          const folderId = await ensureDriveFolder();
+          const fileId = await findDriveDbFile(folderId);
+
+          let cloudLogs = [];
+          let cloudDeletedIds = [];
+
+          if (fileId) {
+            const downloadRes = await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+            const cloudJson = await downloadRes.json();
+            if (cloudJson && Array.isArray(cloudJson.logs)) {
+              cloudLogs = cloudJson.logs;
+              cloudDeletedIds = Array.isArray(cloudJson.deletedIds) ? cloudJson.deletedIds : [];
+            }
+          }
+
+          // Conflict-Safe Merge by ID + updatedAt timestamp
+          const allDeleted = new Set([...state.deletedIds, ...cloudDeletedIds]);
+          const mergedMap = new Map();
+
+          [...cloudLogs, ...state.logs].forEach(item => {
+            if (!item || !item.id || allDeleted.has(item.id)) return;
+            const existing = mergedMap.get(item.id);
+            if (!existing || (item.updatedAt || 0) >= (existing.updatedAt || 0)) {
+              mergedMap.set(item.id, item);
+            }
+          });
+
+          const mergedLogs = Array.from(mergedMap.values());
+          state.logs = mergedLogs;
+          state.deletedIds = Array.from(allDeleted).slice(-200);
+          localStorage.setItem('ya_deleted_ids', JSON.stringify(state.deletedIds));
+
+          await dbReplaceAllLogs(mergedLogs);
+
+          // Push merged dataset back to Google Drive
+          await uploadJsonToDrive(folderId, fileId, {
+            company: 'Yunikon Auto',
+            schemaVersion: 1,
+            syncedAt: new Date().toISOString(),
+            deletedIds: state.deletedIds,
+            logs: mergedLogs
+          });
+
+          state.drive.lastSync = new Date().toISOString();
+          localStorage.setItem('ya_gdrive_last_sync', state.drive.lastSync);
+
+          renderLogs();
+          updateDashboardStats();
+          if (!silent) showToast(t('toastDriveSynced'), 'success');
+        } catch (err) {
+          console.error('Google Drive Sync Error:', err);
+          if (!silent) showToast('Drive Sync Error: ' + err.message, 'error');
+        } finally {
+          state.drive.isSyncing = false;
+          updateDriveUI();
+        }
+      }
+
+      /* =========================================================================
+         6. IMAGE COMPRESSION & SCREENSHOT HANDLER (UP TO 10 PER LOG)
+      ========================================================================= */
+      function compressImageFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const MAX_DIM = 1400;
+              let width = img.width;
+              let height = img.height;
+
+              if (width > MAX_DIM || height > MAX_DIM) {
+                if (width > height) {
+                  height = Math.round((height * MAX_DIM) / width);
+                  width = MAX_DIM;
+                } else {
+                  width = Math.round((width * MAX_DIM) / height);
+                  height = MAX_DIM;
+                }
+              }
+
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, width, height);
+              ctx.drawImage(img, 0, 0, width, height);
+
+              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+              resolve(compressedDataUrl);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function handleIncomingImages(fileList) {
+        const files = Array.from(fileList).filter(f => f.type && f.type.startsWith('image/'));
+        if (!files.length) return;
+
+        for (const file of files) {
+          if (state.currentPhotos.length >= MAX_PHOTOS) {
+            showToast(t('toastMaxPhotos'), 'warning');
+            break;
+          }
+          try {
+            const compressed = await compressImageFile(file);
+            state.currentPhotos.push(compressed);
+          } catch (err) {
+            console.error('Image compression failed:', err);
+          }
+        }
+        renderFormPhotoPreviews();
+      }
+
+      function renderFormPhotoPreviews() {
+        const container = document.getElementById('formPhotoPreviews');
+        const badge = document.getElementById('photoCounterBadge');
+        const count = state.currentPhotos.length;
+
+        badge.textContent = `${count} / ${MAX_PHOTOS}`;
+        badge.className = count >= MAX_PHOTOS
+          ? 'text-xs font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300'
+          : 'text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300';
+
+        if (count === 0) {
+          container.classList.add('hidden');
+          container.innerHTML = '';
+          return;
+        }
+
+        container.classList.remove('hidden');
+        container.innerHTML = state.currentPhotos.map((src, idx) => `
+          <div class="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+            <img src="${src}" alt="Preview ${idx + 1}" class="w-full h-full object-cover cursor-pointer" onclick="openLightboxFromForm(${idx})" />
+            <button
+              type="button"
+              onclick="removeFormPhoto(${idx})"
+              class="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center text-xs font-bold shadow hover:bg-rose-700 transition"
+              title="Remove"
+            >
+              ×
+            </button>
+          </div>
+        `).join('');
+      }
+
+      window.removeFormPhoto = function (index) {
+        state.currentPhotos.splice(index, 1);
+        renderFormPhotoPreviews();
+      };
+
+      window.openLightboxFromForm = function (index) {
+        openLightbox(state.currentPhotos, index, document.getElementById('logTitle').value || 'Draft Attachment');
+      };
+
+      /* =========================================================================
+         7. LIGHTBOX MODAL LOGIC
+      ========================================================================= */
+      function openLightbox(photosArray, startIndex, title = '') {
+        if (!photosArray || !photosArray.length) return;
+        state.lightboxPhotos = photosArray;
+        state.lightboxIndex = startIndex;
+        state.lightboxTitle = title;
+        updateLightboxStage();
+        document.getElementById('lightboxModal').classList.remove('hidden');
+      }
+
+      function updateLightboxStage() {
+        const total = state.lightboxPhotos.length;
+        const idx = state.lightboxIndex;
+        const src = state.lightboxPhotos[idx];
+        document.getElementById('lightboxImage').src = src;
+        document.getElementById('lightboxCounter').textContent = `${idx + 1} / ${total}`;
+        document.getElementById('lightboxTitle').textContent = state.lightboxTitle;
+        const dlBtn = document.getElementById('lightboxDownloadBtn');
+        dlBtn.href = src;
+        dlBtn.download = `yunikon-auto-doc-${idx + 1}.jpg`;
+
+        document.getElementById('lightboxPrevBtn').style.visibility = total > 1 ? 'visible' : 'hidden';
+        document.getElementById('lightboxNextBtn').style.visibility = total > 1 ? 'visible' : 'hidden';
+      }
+
+      function closeLightbox() {
+        document.getElementById('lightboxModal').classList.add('hidden');
+      }
+
+      /* =========================================================================
+         8. BILINGUAL UI & THEME MANAGEMENT
+      ========================================================================= */
+      function t(key) {
+        return (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key;
+      }
+
+      function applyLanguage() {
+        document.documentElement.lang = state.lang;
+        document.getElementById('langToggleBtn').textContent = state.lang === 'si' ? 'English' : 'සිංහල';
+
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+          const key = el.getAttribute('data-i18n');
+          if (key === 'guideStep1List' || key === 'guideStep2List') {
+            el.innerHTML = t(key);
+          } else {
+            el.textContent = t(key);
+          }
+        });
+
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+          const key = el.getAttribute('data-i18n-placeholder');
+          el.placeholder = t(key);
+        });
+
+        populateDropdowns();
+        renderLogs();
+        updateDriveUI();
+        updateStorageIndicator();
+      }
+
+      function applyTheme() {
+        const html = document.documentElement;
+        const sun = document.getElementById('sunIcon');
+        const moon = document.getElementById('moonIcon');
+        if (state.theme === 'dark') {
+          html.classList.add('dark');
+          sun.classList.remove('hidden');
+          moon.classList.add('hidden');
+        } else {
+          html.classList.remove('dark');
+          sun.classList.add('hidden');
+          moon.classList.remove('hidden');
+        }
+      }
+
+      function populateDropdowns() {
+        // Form Category Dropdown
+        const logCategory = document.getElementById('logCategory');
+        const prevCat = logCategory.value;
+        logCategory.innerHTML = CATEGORIES.map(c => `<option value="${escapeHTML(c.value)}">${escapeHTML(t(c.key))}</option>`).join('');
+        if (prevCat && Array.from(logCategory.options).some(o => o.value === prevCat)) {
+          logCategory.value = prevCat;
+        }
+
+        // Form Status Dropdown
+        const logStatus = document.getElementById('logStatus');
+        const prevStatus = logStatus.value;
+        logStatus.innerHTML = STATUSES.map(s => `<option value="${s.value}">${escapeHTML(t(s.key))}</option>`).join('');
+        if (prevStatus) logStatus.value = prevStatus;
+
+        // Filter Status Dropdown
+        const filterStatus = document.getElementById('filterStatus');
+        const prevFStatus = filterStatus.value;
+        filterStatus.innerHTML = `<option value="all">${escapeHTML(t('allStatuses'))}</option>` +
+          STATUSES.map(s => `<option value="${s.value}">${escapeHTML(t(s.key))}</option>`).join('');
+        if (prevFStatus) filterStatus.value = prevFStatus;
+
+        // Filter Category Dropdown
+        const filterCategory = document.getElementById('filterCategory');
+        const prevFCat = filterCategory.value;
+        const uniqueCategories = new Set(CATEGORIES.filter(c => c.value !== '__CUSTOM__').map(c => c.value));
+        state.logs.forEach(l => { if (l.category) uniqueCategories.add(l.category); });
+
+        filterCategory.innerHTML = `<option value="all">${escapeHTML(t('allCategories'))}</option>` +
+          Array.from(uniqueCategories).map(cat => `<option value="${escapeHTML(cat)}">${escapeHTML(cat)}</option>`).join('');
+        if (prevFCat) filterCategory.value = prevFCat;
+      }
+
+      /* =========================================================================
+         9. FORM ACTIONS (CREATE, EDIT, DUPLICATE, DELETE, DATE/TIME FILL)
+      ========================================================================= */
+      function setTodayNow() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+
+        document.getElementById('logDate').value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById('logTime').value = `${hh}:${min}`;
+      }
+
+      function resetFormToCreateMode() {
+        document.getElementById('editingLogId').value = '';
+        document.getElementById('workLogForm').reset();
+        document.getElementById('customCategoryWrapper').classList.add('hidden');
+        state.currentPhotos = [];
+        renderFormPhotoPreviews();
+        setTodayNow();
+
+        document.getElementById('formHeading').textContent = t('newEntryHeading');
+        document.getElementById('formModeBadge').className = 'w-2.5 h-2.5 rounded-full bg-blue-600';
+        document.getElementById('saveLogBtn').textContent = t('saveEntryBtn');
+        document.getElementById('cancelEditBtn').classList.add('hidden');
+      }
+
+      async function handleFormSubmit(e) {
+        e.preventDefault();
+
+        const editingId = document.getElementById('editingLogId').value;
+        const date = document.getElementById('logDate').value;
+        const time = document.getElementById('logTime').value;
+        const rawCategory = document.getElementById('logCategory').value;
+        const customCategory = document.getElementById('customCategoryInput').value.trim();
+        const title = document.getElementById('logTitle').value.trim();
+        const status = document.getElementById('logStatus').value;
+        const notes = document.getElementById('logNotes').value.trim();
+
+        let finalCategory = rawCategory;
+        if (rawCategory === '__CUSTOM__') {
+          if (!customCategory) {
+            showToast(t('toastCustomCatRequired'), 'error');
+            document.getElementById('customCategoryInput').focus();
+            return;
+          }
+          finalCategory = customCategory;
+        }
+
+        if (!title || !date || !time) return;
+
+        const nowTs = Date.now();
+        const logEntry = {
+          id: editingId || `ya_${nowTs}_${Math.random().toString(36).slice(2, 7)}`,
+          date,
+          time,
+          category: finalCategory,
+          title,
+          status,
+          notes,
+          photos: [...state.currentPhotos],
+          createdAt: editingId ? (state.logs.find(l => l.id === editingId)?.createdAt || nowTs) : nowTs,
+          updatedAt: nowTs
+        };
+
+        await dbPutLog(logEntry);
+
+        if (editingId) {
+          const idx = state.logs.findIndex(l => l.id === editingId);
+          if (idx !== -1) state.logs[idx] = logEntry;
+          showToast(t('toastUpdated'), 'success');
+        } else {
+          state.logs.unshift(logEntry);
+          showToast(t('toastSaved'), 'success');
+        }
+
+        resetFormToCreateMode();
+        populateDropdowns();
+        renderLogs();
+        updateDashboardStats();
+
+        if (state.drive.autoSync && state.drive.accessToken) {
+          syncWithGoogleDrive(true);
+        }
+      }
+
+      window.startEditLog = function (id) {
+        const log = state.logs.find(l => l.id === id);
+        if (!log) return;
+
+        document.getElementById('editingLogId').value = log.id;
+        document.getElementById('logDate').value = log.date;
+        document.getElementById('logTime').value = log.time;
+        document.getElementById('logTitle').value = log.title;
+        document.getElementById('logStatus').value = log.status;
+        document.getElementById('logNotes').value = log.notes || '';
+
+        const isStandardCat = CATEGORIES.some(c => c.value === log.category && c.value !== '__CUSTOM__');
+        if (isStandardCat) {
+          document.getElementById('logCategory').value = log.category;
+          document.getElementById('customCategoryWrapper').classList.add('hidden');
+        } else {
+          document.getElementById('logCategory').value = '__CUSTOM__';
+          document.getElementById('customCategoryWrapper').classList.remove('hidden');
+          document.getElementById('customCategoryInput').value = log.category;
+        }
+
+        state.currentPhotos = Array.isArray(log.photos) ? [...log.photos] : [];
+        renderFormPhotoPreviews();
+
+        document.getElementById('formHeading').textContent = t('editEntryHeading');
+        document.getElementById('formModeBadge').className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+        document.getElementById('saveLogBtn').textContent = t('updateEntryBtn');
+        document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+        document.getElementById('entryFormSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+
+      window.duplicateLog = function (id) {
+        const log = state.logs.find(l => l.id === id);
+        if (!log) return;
+
+        resetFormToCreateMode();
+        setTodayNow();
+        document.getElementById('logTitle').value = log.title;
+        document.getElementById('logStatus').value = log.status;
+        document.getElementById('logNotes').value = log.notes || '';
+
+        const isStandardCat = CATEGORIES.some(c => c.value === log.category && c.value !== '__CUSTOM__');
+        if (isStandardCat) {
+          document.getElementById('logCategory').value = log.category;
+          document.getElementById('customCategoryWrapper').classList.add('hidden');
+        } else {
+          document.getElementById('logCategory').value = '__CUSTOM__';
+          document.getElementById('customCategoryWrapper').classList.remove('hidden');
+          document.getElementById('customCategoryInput').value = log.category;
+        }
+
+        state.currentPhotos = Array.isArray(log.photos) ? [...log.photos] : [];
+        renderFormPhotoPreviews();
+
+        showToast(t('toastDuplicated'), 'info');
+        document.getElementById('entryFormSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+
+      window.promptDeleteLog = function (id) {
+        showConfirmDialog(t('confirmDeleteTitle'), t('confirmDeleteMsg'), async () => {
+          await dbDeleteLog(id);
+          state.logs = state.logs.filter(l => l.id !== id);
+          state.deletedIds.push(id);
+          localStorage.setItem('ya_deleted_ids', JSON.stringify(state.deletedIds.slice(-200)));
+
+          if (document.getElementById('editingLogId').value === id) {
+            resetFormToCreateMode();
+          }
+
+          renderLogs();
+          updateDashboardStats();
+          showToast(t('toastDeleted'), 'info');
+
+          if (state.drive.autoSync && state.drive.accessToken) {
+            syncWithGoogleDrive(true);
+          }
+        });
+      };
+
+      window.openLogPhotoLightbox = function (logId, photoIndex) {
+        const log = state.logs.find(l => l.id === logId);
+        if (!log || !log.photos) return;
+        openLightbox(log.photos, photoIndex, `${log.date} • ${log.title}`);
+      };
+
+      /* =========================================================================
+         10. RENDER LOGS, KPI STATS & STORAGE INDICATOR
+      ========================================================================= */
+      function getStatusBadgeHTML(status) {
+        if (status === 'completed') {
+          return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>${escapeHTML(t('statusCompleted'))}
+          </span>`;
+        }
+        if (status === 'in_progress') {
+          return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>${escapeHTML(t('statusInProgress'))}
+          </span>`;
+        }
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>${escapeHTML(t('statusNotStarted'))}
+        </span>`;
+      }
+
+      function getFilteredLogs() {
+        const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        const statusFilter = document.getElementById('filterStatus').value;
+        const categoryFilter = document.getElementById('filterCategory').value;
+        const dateFilter = document.getElementById('filterDate').value;
+
+        return state.logs
+          .filter(log => {
+            if (statusFilter !== 'all' && log.status !== statusFilter) return false;
+            if (categoryFilter !== 'all' && log.category !== categoryFilter) return false;
+            if (dateFilter && log.date !== dateFilter) return false;
+            if (query) {
+              const hay = `${log.title} ${log.notes} ${log.category} ${log.date}`.toLowerCase();
+              if (!hay.includes(query)) return false;
+            }
+            return true;
+          })
+          .sort((a, b) => {
+            const dtA = `${a.date}T${a.time}`;
+            const dtB = `${b.date}T${b.time}`;
+            return dtB.localeCompare(dtA);
+          });
+      }
+
+      function renderLogs() {
+        const container = document.getElementById('logsListContainer');
+        const filtered = getFilteredLogs();
+        updateStorageIndicator();
+
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center">
+              <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">${escapeHTML(t('emptyTitle'))}</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">${escapeHTML(t('emptySub'))}</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = filtered.map(log => {
+          const photos = Array.isArray(log.photos) ? log.photos : [];
+          const thumbsHTML = photos.length > 0
+            ? `<div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div class="flex flex-wrap gap-2">
+                  ${photos.map((src, idx) => `
+                    <button
+                      type="button"
+                      onclick="openLogPhotoLightbox('${escapeHTML(log.id)}', ${idx})"
+                      class="print-thumb relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:ring-2 hover:ring-blue-500 transition group shrink-0"
+                    >
+                      <img src="${src}" alt="Screenshot ${idx + 1}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" />
+                      <span class="absolute bottom-1 right-1 px-1.5 py-0.2 rounded bg-slate-900/75 text-white text-[10px] font-bold">${idx + 1}</span>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>`
+            : '';
+
+          return `
+            <article class="log-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition animate-entry">
+              <div class="flex flex-wrap items-start justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold">
+                    <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    ${escapeHTML(log.date)} • ${escapeHTML(log.time)}
+                  </span>
+                  <span class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200/70 dark:border-blue-800">
+                    ${escapeHTML(log.category)}
+                  </span>
+                </div>
+                <div>${getStatusBadgeHTML(log.status)}</div>
+              </div>
+
+              <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white mt-2.5 leading-snug">
+                ${escapeHTML(log.title)}
+              </h3>
+
+              ${log.notes ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1.5 whitespace-pre-line leading-relaxed">${escapeHTML(log.notes)}</p>` : ''}
+
+              ${thumbsHTML}
+
+              <!-- Entry Action Buttons -->
+              <div class="log-actions mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                <span class="text-[11px] text-slate-400">
+                  ${photos.length} ${photos.length === 1 ? 'photo' : 'photos'}
+                </span>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onclick="startEditLog('${escapeHTML(log.id)}')"
+                    class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-blue-900/40 text-slate-700 dark:text-slate-200 hover:text-blue-600 transition"
+                  >
+                    ${escapeHTML(t('editBtn'))}
+                  </button>
+                  <button
+                    type="button"
+                    onclick="duplicateLog('${escapeHTML(log.id)}')"
+                    class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-900/40 text-slate-700 dark:text-slate-200 hover:text-indigo-600 transition"
+                  >
+                    ${escapeHTML(t('duplicateBtn'))}
+                  </button>
+                  <button
+                    type="button"
+                    onclick="promptDeleteLog('${escapeHTML(log.id)}')"
+                    class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 transition"
+                  >
+                    ${escapeHTML(t('deleteBtn'))}
+                  </button>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function updateDashboardStats() {
+        const total = state.logs.length;
+        const completed = state.logs.filter(l => l.status === 'completed').length;
+        const inProgress = state.logs.filter(l => l.status === 'in_progress').length;
+        const notStarted = state.logs.filter(l => l.status === 'not_started').length;
+
+        document.getElementById('statTotalCount').textContent = total;
+        document.getElementById('statCompletedCount').textContent = completed;
+        document.getElementById('statInProgressCount').textContent = inProgress;
+        document.getElementById('statNotStartedCount').textContent = notStarted;
+      }
+
+      function updateStorageIndicator() {
+        const bytes = new Blob([JSON.stringify(state.logs)]).size;
+        const sizeStr = bytes > 1024 * 1024
+          ? `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+          : `${Math.round(bytes / 1024)} KB`;
+        document.getElementById('storageIndicatorText').textContent = `${state.logs.length} logs • ${sizeStr}`;
+      }
+
+      /* =========================================================================
+         11. EXPORT CSV (EXCEL UTF-8), JSON BACKUP/RESTORE & PRINT
+      ========================================================================= */
+      function exportToCSV() {
+        const rows = getFilteredLogs();
+        const headers = ['Date', 'Time', 'Category', 'Document / Task Title', 'Status', 'Notes', 'Screenshots Count'];
+
+        const statusLabelMap = {
+          completed: 'Completed (කම්ප්ලීට් කරලා)',
+          in_progress: 'In Progress (කර කර ඉන්නවා)',
+          not_started: 'Not Started Yet (තාම පටන් ගත්තේ නැහැ)'
+        };
+
+        const csvLines = [headers.join(',')];
+        rows.forEach(r => {
+          const cols = [
+            r.date,
+            r.time,
+            r.category,
+            r.title,
+            statusLabelMap[r.status] || r.status,
+            r.notes || '',
+            (r.photos || []).length
+          ].map(val => `"${String(val).replace(/"/g, '""')}"`);
+          csvLines.push(cols.join(','));
+        });
+
+        // Prepend UTF-8 BOM (\uFEFF) so Microsoft Excel renders Sinhala characters cleanly
+        const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Yunikon-Auto-Work-Logs-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(t('toastCsvExported'), 'success');
+      }
+
+      function exportToJSON() {
+        const payload = {
+          company: 'Yunikon Auto',
+          exportedAt: new Date().toISOString(),
+          logs: state.logs
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Yunikon-Auto-Backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(t('toastBackupExported'), 'success');
+      }
+
+      async function restoreFromJSON(file) {
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          const importedLogs = Array.isArray(parsed) ? parsed : parsed.logs;
+          if (!Array.isArray(importedLogs)) throw new Error('Invalid backup format');
+
+          const mergedMap = new Map(state.logs.map(l => [l.id, l]));
+          importedLogs.forEach(item => {
+            if (item && item.id && item.title) {
+              mergedMap.set(item.id, item);
+            }
+          });
+
+          state.logs = Array.from(mergedMap.values());
+          await dbReplaceAllLogs(state.logs);
+          populateDropdowns();
+          renderLogs();
+          updateDashboardStats();
+          showToast(t('toastRestored'), 'success');
+
+          if (state.drive.autoSync && state.drive.accessToken) {
+            syncWithGoogleDrive(true);
+          }
+        } catch (err) {
+          showToast('Restore failed: ' + err.message, 'error');
+        }
+      }
+
+      /* =========================================================================
+         12. TOAST NOTIFICATIONS & CONFIRM MODAL HELPERS
+      ========================================================================= */
+      function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const colors = {
+          success: 'bg-emerald-600 text-white border-emerald-500',
+          error: 'bg-rose-600 text-white border-rose-500',
+          warning: 'bg-amber-500 text-slate-950 border-amber-400',
+          info: 'bg-slate-800 text-white border-slate-700'
+        };
+        const toast = document.createElement('div');
+        toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-xl border text-xs font-semibold flex items-center justify-between gap-3 animate-entry ${colors[type] || colors.info}`;
+        toast.innerHTML = `<span>${escapeHTML(message)}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transition = 'opacity 0.25s ease';
+          setTimeout(() => toast.remove(), 260);
+        }, 3400);
+      }
+
+      function showConfirmDialog(title, message, onConfirm) {
+        const modal = document.getElementById('confirmModal');
+        document.getElementById('confirmModalTitle').textContent = title;
+        document.getElementById('confirmModalMessage').textContent = message;
+        modal.classList.remove('hidden');
+
+        const okBtn = document.getElementById('confirmOkBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+
+        const cleanup = () => {
+          modal.classList.add('hidden');
+          okBtn.onclick = null;
+          cancelBtn.onclick = null;
+        };
+
+        okBtn.onclick = () => {
+          cleanup();
+          onConfirm();
+        };
+        cancelBtn.onclick = cleanup;
+      }
+
+      /* =========================================================================
+         13. EVENT LISTENERS & INITIALIZATION
+      ========================================================================= */
+      function bindEvents() {
+        // Theme Toggle
+        document.getElementById('themeToggleBtn').addEventListener('click', () => {
+          state.theme = state.theme === 'light' ? 'dark' : 'light';
+          localStorage.setItem('ya_theme', state.theme);
+          applyTheme();
+        });
+
+        // Language Toggle (Header & Lock Screen)
+        const toggleLanguage = () => {
+          state.lang = state.lang === 'si' ? 'en' : 'si';
+          localStorage.setItem('ya_lang', state.lang);
+          applyLanguage();
+        };
+        document.getElementById('langToggleBtn').addEventListener('click', toggleLanguage);
+        document.getElementById('lockLangToggle').addEventListener('click', toggleLanguage);
+
+        // Today / Now Quick Fill
+        document.getElementById('fillNowBtn').addEventListener('click', setTodayNow);
+
+        // Category Custom Input Reveal
+        document.getElementById('logCategory').addEventListener('change', (e) => {
+          const wrapper = document.getElementById('customCategoryWrapper');
+          if (e.target.value === '__CUSTOM__') {
+            wrapper.classList.remove('hidden');
+            document.getElementById('customCategoryInput').focus();
+          } else {
+            wrapper.classList.add('hidden');
+          }
+        });
+
+        // Form Submit & Cancel Edit
+        document.getElementById('workLogForm').addEventListener('submit', handleFormSubmit);
+        document.getElementById('cancelEditBtn').addEventListener('click', resetFormToCreateMode);
+
+        // Photo Dropzone, Click & Paste
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('photoFileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+          handleIncomingImages(e.target.files);
+          fileInput.value = '';
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropZone.classList.add('border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+        });
+        dropZone.addEventListener('dragleave', () => {
+          dropZone.classList.remove('border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+        });
+        dropZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+          if (e.dataTransfer && e.dataTransfer.files) {
+            handleIncomingImages(e.dataTransfer.files);
+          }
+        });
+
+        // Global Ctrl+V / Cmd+V Clipboard Image Paste
+        window.addEventListener('paste', (e) => {
+          if (state.security.isLocked) return;
+          const items = e.clipboardData && e.clipboardData.items;
+          if (!items) return;
+          const imageFiles = [];
+          for (const item of items) {
+            if (item.type.indexOf('image') !== -1) {
+              const file = item.getAsFile();
+              if (file) imageFiles.push(file);
+            }
+          }
+          if (imageFiles.length > 0) {
+            handleIncomingImages(imageFiles);
+          }
+        });
+
+        // Search & Filters
+        document.getElementById('searchInput').addEventListener('input', renderLogs);
+        document.getElementById('filterStatus').addEventListener('change', renderLogs);
+        document.getElementById('filterCategory').addEventListener('change', renderLogs);
+        document.getElementById('filterDate').addEventListener('change', renderLogs);
+        document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+          document.getElementById('searchInput').value = '';
+          document.getElementById('filterStatus').value = 'all';
+          document.getElementById('filterCategory').value = 'all';
+          document.getElementById('filterDate').value = '';
+          renderLogs();
+        });
+
+        // Exports & Print
+        document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
+        document.getElementById('exportJsonBtn').addEventListener('click', exportToJSON);
+        document.getElementById('restoreJsonInput').addEventListener('change', (e) => {
+          restoreFromJSON(e.target.files[0]);
+          e.target.value = '';
+        });
+        document.getElementById('printReportBtn').addEventListener('click', () => {
+          document.getElementById('printTimestamp').textContent = `Yunikon Auto — Daily Work Report • Printed: ${new Date().toLocaleString()}`;
+          window.print();
+        });
+
+        // Lightbox Controls
+        document.getElementById('closeLightboxBtn').addEventListener('click', closeLightbox);
+        document.getElementById('lightboxPrevBtn').addEventListener('click', () => {
+          const total = state.lightboxPhotos.length;
+          state.lightboxIndex = (state.lightboxIndex - 1 + total) % total;
+          updateLightboxStage();
+        });
+        document.getElementById('lightboxNextBtn').addEventListener('click', () => {
+          const total = state.lightboxPhotos.length;
+          state.lightboxIndex = (state.lightboxIndex + 1) % total;
+          updateLightboxStage();
+        });
+
+        window.addEventListener('keydown', (e) => {
+          const lb = document.getElementById('lightboxModal');
+          if (!lb.classList.contains('hidden')) {
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') document.getElementById('lightboxPrevBtn').click();
+            if (e.key === 'ArrowRight') document.getElementById('lightboxNextBtn').click();
+          }
+        });
+
+        // Modal Openers & Closers
+        document.getElementById('openDriveModalBtn').addEventListener('click', () => {
+          document.getElementById('googleClientIdInput').value = state.drive.clientId;
+          document.getElementById('autoSyncCheckbox').checked = state.drive.autoSync;
+          updateDriveUI();
+          document.getElementById('driveModal').classList.remove('hidden');
+        });
+        document.getElementById('openSecurityModalBtn').addEventListener('click', () => {
+          document.getElementById('securityModal').classList.remove('hidden');
+        });
+        document.getElementById('openGuideModalBtn').addEventListener('click', () => {
+          document.getElementById('guideModal').classList.remove('hidden');
+        });
+        document.querySelectorAll('.close-modal').forEach(btn => {
+          btn.addEventListener('click', () => {
+            btn.closest('.fixed').classList.add('hidden');
+          });
+        });
+
+        // Google Drive Modal Controls
+        document.getElementById('autoSyncCheckbox').addEventListener('change', (e) => {
+          state.drive.autoSync = e.target.checked;
+          localStorage.setItem('ya_gdrive_autosync', String(state.drive.autoSync));
+        });
+
+        document.getElementById('connectDriveBtn').addEventListener('click', async () => {
+          try {
+            await requestDriveAccessToken(true);
+            showToast(t('toastDriveConnected'), 'success');
+            await syncWithGoogleDrive(true);
+          } catch (err) {
+            console.error(err);
+          }
+        });
+
+        document.getElementById('syncDriveNowModalBtn').addEventListener('click', async () => {
+          if (!state.drive.accessToken || Date.now() >= state.drive.tokenExpiry) {
+            await requestDriveAccessToken(true);
+          }
+          await syncWithGoogleDrive(false);
+        });
+
+        document.getElementById('quickSyncBtn').addEventListener('click', () => syncWithGoogleDrive(false));
+
+        document.getElementById('disconnectDriveBtn').addEventListener('click', () => {
+          if (state.drive.accessToken && window.google && google.accounts && google.accounts.oauth2) {
+            google.accounts.oauth2.revoke(state.drive.accessToken, () => {});
+          }
+          state.drive.accessToken = null;
+          state.drive.tokenExpiry = 0;
+          updateDriveUI();
+          showToast('Google Drive disconnected.', 'info');
+        });
+
+        // Security PIN Setup & Unlock
+        document.getElementById('setPinForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const p1 = document.getElementById('newPinInput').value.trim();
+          const p2 = document.getElementById('confirmPinInput').value.trim();
+          const mins = parseInt(document.getElementById('autoLockMinutesSelect').value, 10);
+
+          state.security.autoLockMinutes = mins;
+          localStorage.setItem('ya_autolock_min', String(mins));
+
+          if (p1 || p2) {
+            if (p1.length < 4 || p1 !== p2) {
+              showToast(t('toastPinMismatch'), 'error');
+              return;
+            }
+            const hash = await sha256(p1);
+            state.security.pinHash = hash;
+            localStorage.setItem('ya_pin_hash', hash);
+            document.getElementById('newPinInput').value = '';
+            document.getElementById('confirmPinInput').value = '';
+          }
+
+          updateSecurityUI();
+          resetInactivityTimer();
+          document.getElementById('securityModal').classList.add('hidden');
+          showToast(t('toastPinSaved'), 'success');
+        });
+
+        document.getElementById('removePinBtn').addEventListener('click', () => {
+          state.security.pinHash = '';
+          localStorage.removeItem('ya_pin_hash');
+          updateSecurityUI();
+          document.getElementById('securityModal').classList.add('hidden');
+          showToast(t('toastPinRemoved'), 'info');
+        });
+
+        document.getElementById('instantLockBtn').addEventListener('click', lockWorkspace);
+
+        document.getElementById('unlockForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const entered = document.getElementById('unlockPinInput').value.trim();
+          const hash = await sha256(entered);
+          if (hash === state.security.pinHash) {
+            unlockWorkspace();
+          } else {
+            const errEl = document.getElementById('unlockErrorMsg');
+            errEl.textContent = t('wrongPinError');
+            errEl.classList.remove('hidden');
+            document.getElementById('unlockPinInput').value = '';
+            document.getElementById('unlockPinInput').focus();
+          }
+        });
+
+        // Reset inactivity timer on user activity
+        ['mousemove', 'keydown', 'click', 'touchstart'].forEach(evt => {
+          window.addEventListener(evt, resetInactivityTimer, { passive: true });
+        });
+      }
+
+      /* =========================================================================
+         14. BOOTSTRAP APPLICATION
+      ========================================================================= */
+      async function bootstrap() {
+        applyTheme();
+        updateSecurityUI();
+
+        if (state.security.pinHash) {
+          lockWorkspace();
+        }
+
+        await initDB();
+        state.logs = await dbGetAllLogs();
+
+        setTodayNow();
+        populateDropdowns();
+        applyLanguage();
+        updateDashboardStats();
+        bindEvents();
+      }
+
+      window.addEventListener('DOMContentLoaded', bootstrap);
+    })();
+  </script>
+</body>
+</html>
